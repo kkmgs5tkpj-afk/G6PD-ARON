@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>دليل أدوية G6PD - G6PD-ARON</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --danger-color: #e74c3c;
+            --warning-color: #f39c12;
+            --safe-color: #27ae60;
+            --bg-color: #f8f9fa;
+        }
+        body {
+            font-family: 'Segoe Tahoma', Geneva, sans-serif, Arial, sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        header h1 {
+            color: var(--primary-color);
+            margin-bottom: 5px;
+        }
+        header p {
+            color: #666;
+            font-size: 14px;
+        }
+        .search-box {
+            width: 100%;
+            padding: 12px 20px;
+            font-size: 16px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            box-sizing: border-box;
+            margin-bottom: 25px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+        .search-box:focus {
+            border-color: var(--primary-color);
+        }
+        .category {
+            background: #fff;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .category h2 {
+            margin-top: 0;
+            font-size: 18px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #eee;
+        }
+        .high-risk h2 { color: var(--danger-color); border-color: var(--danger-color); }
+        .mod-risk h2 { color: var(--warning-color); border-color: var(--warning-color); }
+        .safe-risk h2 { color: var(--safe-color); border-color: var(--safe-color); }
+
+        ul {
+            padding-right: 20px;
+            margin: 0;
+        }
+        li {
+            margin-bottom: 8px;
+            font-size: 15px;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            font-size: 13px;
+            color: #888;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>دليل أدوية نقص إنزيم G6PD</h1>
+        <p>تصنيف الأدوية حسب درجة خطورتها على مرضى فقر الدم الباقلائي (ARON STUDY)</p>
+    </header>
+
+    <input type="text" id="searchBar" class="search-box" placeholder="ابحث عن اسم دواء (بالإنجليزية أو العربية)..." onkeyup="searchDrugs()">
+
+    <div id="content">
+        <p style="text-align: center;">جاري تحميل قاعدة البيانات...</p>
+    </div>
+
+    <div class="footer">
+        <p>جميع الحقوق محفوظة للمشروع التعليمي الطّبي &copy; 2026</p>
+    </div>
+</div>
+
+<script>
+    let globalData = {};
+
+    async function loadData() {
+        try {
+            // جلب ملف الـ JSON الذي قمت بإنشائه في مجلد data
+            let response = await fetch('data/drugs.json');
+            globalData = await response.json();
+            displayData(globalData);
+        } catch (error) {
+            document.getElementById('content').innerHTML = '<p style="color: red; text-align: center;">تعذر تحميل بيانات الأدوية. تأكد من صحة مسار ملف الـ JSON.</p>';
+        }
+    }
+
+    function displayData(data) {
+        let container = document.getElementById('content');
+        container.innerHTML = '';
+
+        if (!data.categories) return;
+
+        for (let key in data.categories) {
+            let cat = data.categories[key];
+            let classType = key === 'high_risk' ? 'high-risk' : (key === 'moderate_risk' ? 'mod-risk' : 'safe-risk');
+
+            let html = `
+                <div class="category ${classType}">
+                    <h2>${cat.name_ar}</h2>
+                    <p style="font-size: 13px; color: #555;">${cat.description}</p>
+                    <ul>
+                        ${cat.drugs.map(drug => `<li>${drug}</li>`).join('')}
+                    </ul>
+                </div>
+            `;
+            container.innerHTML += html;
+        }
+    }
+
+    function searchDrugs() {
+        let query = document.getElementById('searchBar').value.toLowerCase();
+        if (!globalData.categories) return;
+
+        let container = document.getElementById('content');
+        container.innerHTML = '';
+
+        for (let key in globalData.categories) {
+            let cat = globalData.categories[key];
+            let filteredDrugs = cat.drugs.filter(drug => drug.toLowerCase().includes(query));
+
+            if (filteredDrugs.length > 0) {
+                let classType = key === 'high_risk' ? 'high-risk' : (key === 'moderate_risk' ? 'mod-risk' : 'safe-risk');
+                let html = `
+                    <div class="category ${classType}">
+                        <h2>${cat.name_ar}</h2>
+                        <ul>
+                            ${filteredDrugs.map(drug => `<li>${drug}</li>`).join('')}
+                        </ul>
+                    </div>
+                `;
+                container.innerHTML += html;
+            }
+        }
+    }
+
+    loadData();
+</script>
+
+</body>
+</html>
